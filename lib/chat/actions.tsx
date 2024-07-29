@@ -242,6 +242,62 @@ async function submitUserMessage(content: string) {
           )
         }
       },
+      saveNameEmail: {
+        description: 'Save the name and email of the user.',
+        parameters: z.object({
+          name: z.string().describe('The name of the user'),
+          email: z.string().describe('The email of the user')
+        }),
+        generate: async function* ({ name, email }) {
+          yield <BotCard>LOADING</BotCard>
+
+          await sleep(1000)
+
+          const toolCallId = nanoid()
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'saveNameEmail',
+                    toolCallId,
+                    args: { name, email }
+                  }
+                ]
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'saveNameEmail',
+                    toolCallId,
+                    result: { name, email }
+                  }
+                ]
+              }
+            ]
+          })
+
+          // localStorage.setItem('name', name)
+          // localStorage.setItem('email', email)
+          console.log(name, email)
+
+          return (
+            <BotCard>
+              <p>Name: {name}</p>
+              <p>Email: {email}</p>
+            </BotCard>
+          )
+        }
+      },
       scheduleAppointment: {
         description: 'Schedule an appointment',
         parameters: z.object({

@@ -7,6 +7,36 @@ import {
   CardTitle
 } from '@/components/ui/card'
 import { Skeleton } from '../ui/skeleton'
+import { Resend } from 'resend'
+interface EmailTemplateProps {
+  name: string
+}
+
+export const EmailTemplate: React.FC<Readonly<EmailTemplateProps>> = ({
+  name
+}) => (
+  <div>
+    <h1>Welcome, {name}!</h1>
+  </div>
+)
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+const sendEmail = async () => {
+  'use server'
+  const { data, error } = await resend.emails.send({
+    from: 'sachin@sapkotasachin.com.np',
+    to: ['sachinsapkota4@gmail.com'],
+    subject: 'Hello world',
+    react: EmailTemplate({ name: 'John' })
+  })
+
+  if (error) {
+    return console.error(error)
+  }
+
+  console.log(data)
+}
 
 export function BookAppointmentHead() {
   return (
@@ -31,6 +61,8 @@ export function AppointmentDetailsCard({
     description: string
   }
 }) {
+  // call sendEmail function
+  sendEmail()
   return (
     <Card>
       <CardHeader>
