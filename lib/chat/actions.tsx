@@ -35,6 +35,10 @@ import { saveChat } from '@/app/actions'
 import { SpinnerMessage, UserMessage } from '@/components/stocks/message'
 import { Chat, Message } from '@/lib/types'
 import { auth } from '@/auth'
+import {
+  AppointmentDetailsCard,
+  BookAppointmentHead
+} from '@/components/appointments/book-appointment'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -236,6 +240,68 @@ async function submitUserMessage(content: string) {
               <Stocks props={stocks} />
             </BotCard>
           )
+        }
+      },
+      scheduleAppointment: {
+        description: 'Schedule an appointment',
+        parameters: z.object({
+          appointment: z.object({
+            date: z
+              .string()
+              .describe('The date of the appointment, in ISO-8601 format'),
+            time: z
+              .string()
+              .describe('The time of the appointment, in ISO-8601 format'),
+            description: z
+              .string()
+              .describe('The description of the appointment')
+          })
+        }),
+        generate: async function* ({ appointment }) {
+          yield <BookAppointmentHead />
+
+          await sleep(1000)
+
+          const toolCallId = nanoid()
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'scheduleAppointment',
+                    toolCallId,
+                    args: { appointment }
+                  }
+                ]
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'scheduleAppointment',
+                    toolCallId,
+                    result: {
+                      id: nanoid(),
+                      date: appointment.date,
+                      time: appointment.time,
+                      description: appointment.description
+                    }
+                  }
+                ]
+              }
+            ]
+          })
+          console.log(appointment)
+
+          return <AppointmentDetailsCard appointment={appointment} />
         }
       },
       showStockPrice: {
