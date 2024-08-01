@@ -109,9 +109,10 @@ export function AppointmentDetailsCard({
       </CardHeader>
       <CardContent>
         <p>Date: {appointment.date}</p>
+        <p>Time: {appointment.time}</p>
       </CardContent>
       <CardFooter>
-        <p>Time: {appointment.time}</p>
+        <p>{appointment.name}</p>
       </CardFooter>
     </Card>
   )

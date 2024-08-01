@@ -160,7 +160,7 @@ async function submitUserMessage(content: string) {
   const result = await streamUI({
     model: openai('gpt-3.5-turbo'),
     initial: <SpinnerMessage />,
-    system: `\You are a friendly assistant that helps the user with booking appointment. You ask for name and email of the user and help the user book an appointment to the business and asnwer the frequently asked questions.
+    system: `\You are a friendly assistant that helps the user with booking appointment. You ask for name and email of the user and help the user book an appointment to the business and asnwer the frequently asked questions. If user doesnot have any appointments booked say that user has no appointments and ask for the user to book an appointment, do not even the example appointments.
   
       
       Here's the flow: 
@@ -498,92 +498,163 @@ Currently, appointments can be booked through the chatbot. We are working on add
 
           return (
             <div>
-              {appointment.map(appointment => (
-                <div key={appointment.date}>
-                  <p>Date: {appointment.date}</p>
-                  <p>Time: {appointment.time}</p>
-                  <p>Description: {appointment.description}</p>
-                </div>
+              {appointment.map((appointment, index) => (
+                <AppointmentDetailsCard
+                  key={appointment.name + index}
+                  appointment={appointment}
+                />
               ))}
             </div>
           )
         }
       },
-      deleteAppointment: {
-        description: 'Delete an appointment.',
-        parameters: z.object({
-          appointment: z.array(
-            z.object({
-              name: z.string().describe('The name of the user'),
-              email: z.string().describe('The email for the appointment'),
-              date: z
-                .string()
-                .describe('The date of the appointment, in ISO-8601 format'),
-              time: z
-                .string()
-                .describe('The time of the appointment, in ISO-8601 format'),
-              description: z
-                .string()
-                .describe('The description of the appointment')
-            })
-          )
-        }),
-        generate: async function* ({ appointment }) {
-          yield <BotCard>LOADING</BotCard>
+      // updateAppointment: {
+      //   description: 'Update an appointment.',
+      //   parameters: z.object({
+      //     appointment: z.array(
+      //       z.object({
+      //         name: z.string().describe('The name of the user'),
+      //         email: z.string().describe('The email for the appointment'),
+      //         date: z
+      //           .string()
+      //           .describe('The date of the appointment, in ISO-8601 format'),
+      //         time: z
+      //           .string()
+      //           .describe('The time of the appointment, in ISO-8601 format'),
+      //         description: z
+      //           .string()
+      //           .describe('The description of the appointment')
+      //       })
+      //     )
+      //   }),
+      //   generate: async function* ({ appointment }) {
+      //     yield <BotCard>LOADING</BotCard>
+      //     await sleep(1000)
+      //     const toolCallId = nanoid()
+      //     aiState.done({
+      //       ...aiState.get(),
+      //       messages: [
+      //         ...aiState.get().messages,
+      //         {
+      //           id: nanoid(),
+      //           role: 'assistant',
+      //           content: [
+      //             {
+      //               type: 'tool-call',
+      //               toolName: 'updateAppointment',
+      //               toolCallId,
+      //               args: { appointment }
+      //             }
+      //           ]
+      //         },
+      //         {
+      //           id: nanoid(),
+      //           role: 'tool',
+      //           content: [
+      //             {
+      //               type: 'tool-result',
+      //               toolName: 'updateAppointment',
+      //               toolCallId,
+      //               result: {
+      //                 appointment
+      //               }
+      //             }
+      //           ]
+      //         }
+      //       ]
+      //     })
 
-          await sleep(1000)
+      //     return (
+      //       <BotCard>
+      //         <p>Which one do you want to update?</p>
+      //         {appointment.map((appointment, index) => (
+      //           <div key={appointment.date}>
+      //             <p>{index + 1}</p>
+      //             <p>Date: {appointment.date}</p>
+      //             <p>Time: {appointment.time}</p>
+      //             <p>Description: {appointment.description}</p>
+      //             {/* <button onClick={() => {}}>Update</button> */}
+      //           </div>
+      //         ))}
+      //       </BotCard>
+      //     )
+      //   }
+      // },
+      // deleteAppointment: {
+      //   description: 'Delete an appointment.',
+      //   parameters: z.object({
+      //     appointment: z.array(
+      //       z.object({
+      //         name: z.string().describe('The name of the user'),
+      //         email: z.string().describe('The email for the appointment'),
+      //         date: z
+      //           .string()
+      //           .describe('The date of the appointment, in ISO-8601 format'),
+      //         time: z
+      //           .string()
+      //           .describe('The time of the appointment, in ISO-8601 format'),
+      //         description: z
+      //           .string()
+      //           .describe('The description of the appointment')
+      //       })
+      //     )
+      //   }),
+      //   generate: async function* ({ appointment }) {
+      //     yield <BotCard>LOADING</BotCard>
 
-          const toolCallId = nanoid()
+      //     await sleep(1000)
 
-          aiState.done({
-            ...aiState.get(),
-            messages: [
-              ...aiState.get().messages,
-              {
-                id: nanoid(),
-                role: 'assistant',
-                content: [
-                  {
-                    type: 'tool-call',
-                    toolName: 'deleteAppointment',
-                    toolCallId,
-                    args: { appointment }
-                  }
-                ]
-              },
-              {
-                id: nanoid(),
-                role: 'tool',
-                content: [
-                  {
-                    type: 'tool-result',
-                    toolName: 'deleteAppointment',
-                    toolCallId,
-                    result: {
-                      appointment
-                    }
-                  }
-                ]
-              }
-            ]
-          })
+      //     const toolCallId = nanoid()
 
-          return (
-            <BotCard>
-              <p>Which one do you want to delete?</p>
-              {appointment.map((appointment, index) => (
-                <div key={appointment.date}>
-                  <p>{index + 1}</p>
-                  <p>Date: {appointment.date}</p>
-                  <p>Time: {appointment.time}</p>
-                  <p>Description: {appointment.description}</p>
-                  <button onClick={() => {}}>Delete</button>
-                </div>
-              ))}
-            </BotCard>
-          )
-        }
-      },
+      //     aiState.done({
+      //       ...aiState.get(),
+      //       messages: [
+      //         ...aiState.get().messages,
+      //         {
+      //           id: nanoid(),
+      //           role: 'assistant',
+      //           content: [
+      //             {
+      //               type: 'tool-call',
+      //               toolName: 'deleteAppointment',
+      //               toolCallId,
+      //               args: { appointment }
+      //             }
+      //           ]
+      //         },
+      //         {
+      //           id: nanoid(),
+      //           role: 'tool',
+      //           content: [
+      //             {
+      //               type: 'tool-result',
+      //               toolName: 'deleteAppointment',
+      //               toolCallId,
+      //               result: {
+      //                 appointment
+      //               }
+      //             }
+      //           ]
+      //         }
+      //       ]
+      //     })
+
+      //     return (
+      //       <BotCard>
+      //         <p>Which one do you want to delete?</p>
+      //         {appointment.map((appointment, index) => (
+      //           <div key={appointment.date}>
+      //             <p>{index + 1}</p>
+      //             <p>Date: {appointment.date}</p>
+      //             <p>Time: {appointment.time}</p>
+      //             <p>Description: {appointment.description}</p>
+      //             <button onClick={() => {}}>Delete</button>
+      //           </div>
+      //         ))}
+      //       </BotCard>
+      //     )
+      //   }
+      // },
       showStockPrice: {
         description:
           'Get the current stock price of a given stock or currency. Use this to show the price to the user.',
