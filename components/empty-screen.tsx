@@ -9,7 +9,7 @@ export function EmptyScreen() {
     <div className="mx-auto max-w-2xl px-4">
       <div className="flex flex-col gap-2 rounded-lg border bg-background p-8">
         <h1 className="text-lg font-semibold">
-          Please enter your name and email to start chatting.
+          I am a chatbot that helps you book appointments and manage them.
         </h1>
 
         <p className="leading-normal text-muted-foreground"></p>
