@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card'
 import { Skeleton } from '../ui/skeleton'
 import { Resend } from 'resend'
+
 interface EmailTemplateProps {
   appointment: {
     email: string

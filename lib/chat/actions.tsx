@@ -111,6 +111,32 @@ async function confirmPurchase(symbol: string, price: number, amount: number) {
   }
 }
 
+type Appointment = {
+  name: string
+  email: string
+  date: string
+  time: string
+  description: string
+}
+
+async function deleteAppointment(appointment: Appointment) {
+  'use client'
+
+  const aiState = getMutableAIState<typeof AI>()
+
+  aiState.update({
+    ...aiState.get(),
+    messages: [
+      ...aiState.get().messages,
+      {
+        id: nanoid(),
+        role: 'user',
+        content: `Delete appointment for ${appointment.name} on ${appointment.date} at ${appointment.time} with description ${appointment.description}`
+      }
+    ]
+  })
+}
+
 async function submitUserMessage(content: string) {
   'use server'
 
@@ -434,6 +460,78 @@ async function submitUserMessage(content: string) {
                 </div>
               ))}
             </div>
+          )
+        }
+      },
+      deleteAppointment: {
+        description: 'Delete an appointment.',
+        parameters: z.object({
+          appointment: z.array(
+            z.object({
+              name: z.string().describe('The name of the user'),
+              email: z.string().describe('The email for the appointment'),
+              date: z
+                .string()
+                .describe('The date of the appointment, in ISO-8601 format'),
+              time: z
+                .string()
+                .describe('The time of the appointment, in ISO-8601 format'),
+              description: z
+                .string()
+                .describe('The description of the appointment')
+            })
+          )
+        }),
+        generate: async function* ({ appointment }) {
+          yield <BotCard>LOADING</BotCard>
+
+          await sleep(1000)
+
+          const toolCallId = nanoid()
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'deleteAppointment',
+                    toolCallId,
+                    args: { appointment }
+                  }
+                ]
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'deleteAppointment',
+                    toolCallId,
+                    result: {
+                      appointment
+                    }
+                  }
+                ]
+              }
+            ]
+          })
+
+          return (
+            <BotCard>
+              {appointment.map(appointment => (
+                <div key={appointment.date}>
+                  <p>Date: {appointment.date}</p>
+                  <p>Time: {appointment.time}</p>
+                  <p>Description: {appointment.description}</p>
+                </div>
+              ))}
+            </BotCard>
           )
         }
       },
