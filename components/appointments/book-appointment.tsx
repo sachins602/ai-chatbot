@@ -9,26 +9,59 @@ import {
 import { Skeleton } from '../ui/skeleton'
 import { Resend } from 'resend'
 interface EmailTemplateProps {
-  name: string
+  appointment: {
+    email: string
+    name: string
+    date: string
+    time: string
+    description: string
+  }
 }
 
 export const EmailTemplate: React.FC<Readonly<EmailTemplateProps>> = ({
-  name
+  appointment
+}: {
+  appointment: {
+    email: string
+    name: string
+    date: string
+    time: string
+    description: string
+  }
 }) => (
   <div>
-    <h1>Welcome, {name}!</h1>
+    <h1>Hello, {appointment.name}!</h1>
+
+    <p>
+      Your appointment is confirmed for {appointment.date} at {appointment.time}
+      .
+    </p>
+
+    <p>Your appointment note: {appointment.description}</p>
   </div>
 )
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-const sendEmail = async () => {
+const sendEmail = async ({
+  appointment
+}: {
+  appointment: {
+    email: string
+    name: string
+    date: string
+    time: string
+    description: string
+  }
+}) => {
   'use server'
   const { data, error } = await resend.emails.send({
     from: 'sachin@sapkotasachin.com.np',
-    to: ['sachinsapkota4@gmail.com'],
-    subject: 'Hello world',
-    react: EmailTemplate({ name: 'John' })
+    to: [appointment.email],
+    subject: 'Appointment Confirmation',
+    react: EmailTemplate({
+      appointment
+    })
   })
 
   if (error) {
@@ -56,13 +89,17 @@ export function AppointmentDetailsCard({
   appointment
 }: {
   appointment: {
+    name: string
+    email: string
     date: string
     time: string
     description: string
   }
 }) {
   // call sendEmail function
-  sendEmail()
+  sendEmail({
+    appointment
+  })
   return (
     <Card>
       <CardHeader>

@@ -39,6 +39,7 @@ import {
   AppointmentDetailsCard,
   BookAppointmentHead
 } from '@/components/appointments/book-appointment'
+import useStorage from '@/app/utils/useStorage'
 
 async function confirmPurchase(symbol: string, price: number, amount: number) {
   'use server'
@@ -133,22 +134,17 @@ async function submitUserMessage(content: string) {
   const result = await streamUI({
     model: openai('gpt-3.5-turbo'),
     initial: <SpinnerMessage />,
-    system: `\
-   You are a helpful assistant chatbot designed to greet users, answer FAQs, remember user preferences, schedule appointments, and collect feedback.
+    system: `\You are a friendly assistant that helps the user with booking appointment. You ask for name and email of the user and help the user book an appointment to the business and asnwer the frequently asked questions.
   
-  Messages inside [] means that it's a UI element or a user event. For example:
-  - "[User started the conversation]" means that the user initiated a chat.
-  - "[User ended the conversation]" means that the user ended the chat.
-  - "[User asked an FAQ]" means the user asked a frequently asked question.
-  - "[User scheduled an appointment]" means the user scheduled an appointment.
-  - "[User provided feedback]" means the user submitted feedback.
-
-  Greet the user when they start a conversation.
-  Say goodbye when the user ends the conversation.
-  Answer FAQs when the user asks common questions.
-  Remember the user's name and preferences to personalize interactions.
-  Schedule, reschedule, or cancel appointments as requested.
-  Collect feedback from users and acknowledge receipt.`,
+      
+      Here's the flow: 
+       1. Greet the user.
+       3. Ask the user if they want to book an appointment or ask any question.
+       4. If the user wants to book an appointment, ask for the message and the date and time of the appointment also their name and email.
+       5. If user wants to book more appointments, ask for the message and the date and time of the appointment.
+       6. If the user wants to delete an appointment ask which appointment to delete by showing the list of appointments.
+       7. If the user wants to cancel an appointment ask which appointment to cancel by showing the list of appointments.
+   `,
     messages: [
       ...aiState.get().messages.map((message: any) => ({
         role: message.role,
@@ -156,6 +152,7 @@ async function submitUserMessage(content: string) {
         name: message.name
       }))
     ],
+
     text: ({ content, done, delta }) => {
       if (!textStream) {
         textStream = createStreamableValue('')
@@ -242,66 +239,68 @@ async function submitUserMessage(content: string) {
           )
         }
       },
-      saveNameEmail: {
-        description: 'Save the name and email of the user.',
-        parameters: z.object({
-          name: z.string().describe('The name of the user'),
-          email: z.string().describe('The email of the user')
-        }),
-        generate: async function* ({ name, email }) {
-          yield <BotCard>LOADING</BotCard>
+      // saveNameEmail: {
+      //   description: 'Save the name and email of the user.',
+      //   parameters: z.object({
+      //     name: z.string().describe('The name of the user'),
+      //     email: z.string().describe('The email of the user')
+      //   }),
+      //   generate: async function* ({ name, email }) {
+      //     yield <BotCard>LOADING</BotCard>
 
-          await sleep(1000)
+      //     await sleep(1000)
 
-          const toolCallId = nanoid()
+      //     const toolCallId = nanoid()
 
-          aiState.done({
-            ...aiState.get(),
-            messages: [
-              ...aiState.get().messages,
-              {
-                id: nanoid(),
-                role: 'assistant',
-                content: [
-                  {
-                    type: 'tool-call',
-                    toolName: 'saveNameEmail',
-                    toolCallId,
-                    args: { name, email }
-                  }
-                ]
-              },
-              {
-                id: nanoid(),
-                role: 'tool',
-                content: [
-                  {
-                    type: 'tool-result',
-                    toolName: 'saveNameEmail',
-                    toolCallId,
-                    result: { name, email }
-                  }
-                ]
-              }
-            ]
-          })
+      //     aiState.done({
+      //       ...aiState.get(),
+      //       messages: [
+      //         ...aiState.get().messages,
+      //         {
+      //           id: nanoid(),
+      //           role: 'assistant',
+      //           content: [
+      //             {
+      //               type: 'tool-call',
+      //               toolName: 'saveNameEmail',
+      //               toolCallId,
+      //               args: { name, email }
+      //             }
+      //           ]
+      //         },
+      //         {
+      //           id: nanoid(),
+      //           role: 'tool',
+      //           content: [
+      //             {
+      //               type: 'tool-result',
+      //               toolName: 'saveNameEmail',
+      //               toolCallId,
+      //               result: { name, email }
+      //             }
+      //           ]
+      //         }
+      //       ]
+      //     })
 
-          // localStorage.setItem('name', name)
-          // localStorage.setItem('email', email)
-          console.log(name, email)
+      //     // localStorage.setItem('name', name)
+      //     // localStorage.setItem('email', email)
 
-          return (
-            <BotCard>
-              <p>Name: {name}</p>
-              <p>Email: {email}</p>
-            </BotCard>
-          )
-        }
-      },
+      //     console.log(name, email)
+
+      //     return (
+      //       <BotCard>
+      //         <p>Hello! {name}</p>
+      //       </BotCard>
+      //     )
+      //   }
+      // },
       scheduleAppointment: {
         description: 'Schedule an appointment',
         parameters: z.object({
           appointment: z.object({
+            name: z.string().describe('The name of the user'),
+            email: z.string().describe('The email of the user'),
             date: z
               .string()
               .describe('The date of the appointment, in ISO-8601 format'),
@@ -346,6 +345,8 @@ async function submitUserMessage(content: string) {
                     toolCallId,
                     result: {
                       id: nanoid(),
+                      name: appointment.name,
+                      email: appointment.email,
                       date: appointment.date,
                       time: appointment.time,
                       description: appointment.description
@@ -355,9 +356,85 @@ async function submitUserMessage(content: string) {
               }
             ]
           })
+
+          return (
+            <BotCard>
+              <AppointmentDetailsCard appointment={appointment} />
+            </BotCard>
+          )
+        }
+      },
+      showAppointmentDetails: {
+        description: 'Show the details of an appointment.',
+        parameters: z.object({
+          appointment: z.array(
+            z.object({
+              name: z.string().describe('The name of the user'),
+              email: z.string().describe('The email for the appointment'),
+              date: z
+                .string()
+                .describe('The date of the appointment, in ISO-8601 format'),
+              time: z
+                .string()
+                .describe('The time of the appointment, in ISO-8601 format'),
+              description: z
+                .string()
+                .describe('The description of the appointment')
+            })
+          )
+        }),
+        generate: async function* ({ appointment }) {
+          yield <BotCard>LOADING</BotCard>
+
+          await sleep(1000)
+
+          const toolCallId = nanoid()
+
+          aiState.done({
+            ...aiState.get(),
+            messages: [
+              ...aiState.get().messages,
+              {
+                id: nanoid(),
+                role: 'assistant',
+                content: [
+                  {
+                    type: 'tool-call',
+                    toolName: 'showAppointmentDetails',
+                    toolCallId,
+                    args: { appointment }
+                  }
+                ]
+              },
+              {
+                id: nanoid(),
+                role: 'tool',
+                content: [
+                  {
+                    type: 'tool-result',
+                    toolName: 'showAppointmentDetails',
+                    toolCallId,
+                    result: {
+                      appointment
+                    }
+                  }
+                ]
+              }
+            ]
+          })
           console.log(appointment)
 
-          return <AppointmentDetailsCard appointment={appointment} />
+          return (
+            <div>
+              {appointment.map(appointment => (
+                <div key={appointment.date}>
+                  <p>Date: {appointment.date}</p>
+                  <p>Time: {appointment.time}</p>
+                  <p>Description: {appointment.description}</p>
+                </div>
+              ))}
+            </div>
+          )
         }
       },
       showStockPrice: {
