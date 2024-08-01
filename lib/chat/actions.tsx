@@ -170,6 +170,52 @@ async function submitUserMessage(content: string) {
        5. If user wants to book more appointments, ask for the message and the date and time of the appointment.
        6. If the user wants to delete an appointment ask which appointment to delete by showing the list of appointments.
        7. If the user wants to cancel an appointment ask which appointment to cancel by showing the list of appointments.
+
+  Frequently Asked Questions from the Users:
+1. What types of appointments can I book with this chatbot?
+You can book various types of appointments, including consultations, meetings, service appointments, and more. The available options will be presented to you during the booking process.
+
+2. How do I provide my name and email to the chatbot?
+When you start a chat, the chatbot will prompt you to enter your name and email address. Simply type in the information when asked.
+
+3. Can I specify my preferred date and time for the appointment?
+Yes, after entering your name and email, the chatbot will ask you for your preferred date and time. You can specify the details, and the chatbot will check availability for you.
+
+4. What happens if my preferred date and time are not available?
+If your preferred date and time are not available, the chatbot will suggest the closest available slots and ask you to choose from the options provided.
+
+5. How will I receive confirmation of my appointment?
+You will receive a confirmation email with all the details of your appointment, including the date, time, and any other relevant information.
+
+6. Can I reschedule my appointment through the chatbot?
+Yes, you can reschedule your appointment by initiating a new chat with the chatbot. Provide your existing appointment details, and the bot will guide you through the rescheduling process.
+
+7. Is there a way to cancel my appointment?
+Yes, to cancel your appointment, you can either chat with the bot again and select the cancel option or follow the cancellation instructions provided in your confirmation email.
+
+8. How do I know if my personal information is safe?
+We take data privacy and security very seriously. Your personal information is encrypted and securely stored. We adhere to strict privacy policies to ensure your data is protected.
+
+9. Can the chatbot handle multiple bookings at once?
+Yes, the chatbot can handle multiple bookings. If you need to book more than one appointment, simply follow the prompts for each booking.
+
+10. What if I encounter technical issues while using the chatbot?
+If you experience any technical issues, you can contact our support team through the contact information provided on our website or in your confirmation email.
+
+11. Can I book an appointment outside of normal business hours?
+The chatbot will provide available slots based on the service provider’s business hours. If you require an appointment outside of these hours, please contact our support team for special arrangements.
+
+12. Will I receive reminders for my appointment?
+Yes, you will receive email reminders before your appointment to ensure you don’t miss it.
+
+13. What if I entered the wrong email address by mistake?
+If you entered the wrong email address, you can start a new chat with the correct information or contact our support team to update your details.
+
+14. Can I add additional information or special requests to my booking?
+Yes, the chatbot will provide an option for you to add any additional information or special requests related to your appointment.
+
+15. Is there a mobile app for booking appointments, or is it only through the chatbot?
+Currently, appointments can be booked through the chatbot. We are working on additional features and platforms, so stay tuned for updates.
    `,
     messages: [
       ...aiState.get().messages.map((message: any) => ({
@@ -524,11 +570,14 @@ async function submitUserMessage(content: string) {
 
           return (
             <BotCard>
-              {appointment.map(appointment => (
+              <p>Which one do you want to delete?</p>
+              {appointment.map((appointment, index) => (
                 <div key={appointment.date}>
+                  <p>{index + 1}</p>
                   <p>Date: {appointment.date}</p>
                   <p>Time: {appointment.time}</p>
                   <p>Description: {appointment.description}</p>
+                  <button onClick={() => {}}>Delete</button>
                 </div>
               ))}
             </BotCard>
